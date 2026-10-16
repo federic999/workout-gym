@@ -694,66 +694,91 @@ export function ExerciseVisualModal({ exercise, onClose }: ExerciseVisualModalPr
     setImageLoadError(false);
   }, [exercise?.id]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (exercise) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [exercise, onClose]);
+
   if (!exercise) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-2xl w-full p-5 md:p-6 space-y-5 shadow-2xl">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="fitness-card rounded-3xl max-w-2xl w-full p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl border border-zinc-700/80 animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto"
+      >
         {/* Cabecera */}
-        <div className="flex items-start justify-between gap-4 border-b border-zinc-800 pb-4">
+        <div className="flex items-start justify-between gap-4 border-b border-zinc-800/80 pb-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 {MUSCLE_GROUP_LABELS[exercise.muscleGroup]}
               </span>
               {exercise.baseOriginLabel && (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   {exercise.baseOriginLabel}
                 </span>
               )}
             </div>
-            <h3 className="text-xl font-bold text-zinc-100 mt-1.5">{exercise.name}</h3>
-            <p className="text-xs text-zinc-400">Equipamiento: {exercise.equipment}</p>
+            <h3 className="text-xl md:text-2xl font-black text-zinc-100 tracking-tight mt-1.5">
+              {exercise.name}
+            </h3>
+            <p className="text-xs text-zinc-400">
+              Equipamiento: <strong className="text-zinc-200">{exercise.equipment}</strong>
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold cursor-pointer"
+            className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center text-sm font-bold transition cursor-pointer shrink-0"
+            aria-label="Cerrar modal de ejercicio"
           >
-            ✕ Cerrar
+            ✕
           </button>
         </div>
 
-        {/* Selector de modo visual */}
-        <div className="flex flex-wrap gap-2">
+        {/* Selector de modo visual estilo Segmented Controls */}
+        <div className="flex bg-zinc-950/90 p-1.5 rounded-2xl border border-zinc-800/80 gap-1 overflow-x-auto">
           <button
             onClick={() => setVisualMode('svg')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer whitespace-nowrap ${
               visualMode === 'svg'
-                ? 'bg-emerald-500 text-zinc-950 font-semibold'
-                : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            🎯 Cinemática SVG Animada (100% Offline)
+            🎯 Cinemática SVG (Offline)
           </button>
           <button
             onClick={() => setVisualMode('freedb')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer whitespace-nowrap ${
               visualMode === 'freedb'
-                ? 'bg-emerald-500 text-zinc-950 font-semibold'
-                : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                ? 'bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            📸 Fotos Paso 1/2 (free-exercise-db Dominio Público)
+            📸 Fotos Paso 1 y 2 (free-db)
           </button>
           <button
             onClick={() => setVisualMode('sources')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer whitespace-nowrap ${
               visualMode === 'sources'
-                ? 'bg-amber-500 text-zinc-950 font-semibold'
-                : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                ? 'bg-amber-500 text-zinc-950 shadow-md shadow-amber-500/20'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            🌐 Webs / APIs Sin Derechos de Autor
+            🌐 Fuentes Sin Copyright
           </button>
         </div>
 
@@ -761,16 +786,16 @@ export function ExerciseVisualModal({ exercise, onClose }: ExerciseVisualModalPr
         {visualMode === 'svg' && (
           <div className="space-y-3">
             <ExerciseKinematicSvg pattern={exercise.movementPattern} phase={phase} />
-            <div className="flex items-center justify-between text-xs text-zinc-400">
+            <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
               <span>
-                Músculo primario:{' '}
-                <strong className="text-emerald-400">{exercise.primaryMuscles.join(', ')}</strong>
+                Músculos primarios:{' '}
+                <strong className="text-emerald-400 font-semibold">{exercise.primaryMuscles.join(', ')}</strong>
               </span>
               <button
                 onClick={() => setPhase((p) => (p === 0 ? 1 : 0))}
-                className="text-amber-400 hover:underline cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-300 font-bold transition text-xs cursor-pointer"
               >
-                Alternar Fase ({phase === 0 ? '1 → 2' : '2 → 1'})
+                Alternar Fase ({phase === 0 ? '1 (Inicio)' : '2 (Contracción)'})
               </button>
             </div>
           </div>
@@ -780,47 +805,47 @@ export function ExerciseVisualModal({ exercise, onClose }: ExerciseVisualModalPr
           <div className="space-y-3">
             {!imageLoadError ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-center space-y-1">
+                <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-2.5 text-center space-y-1.5">
                   <img
                     src={exercise.freeExerciseDbUrls[0]}
                     alt={`${exercise.name} - Posición Inicial`}
                     onError={() => setImageLoadError(true)}
-                    className={`w-full h-44 object-cover rounded-lg transition-opacity duration-300 ${
-                      phase === 0 ? 'ring-2 ring-emerald-500' : 'opacity-80'
+                    className={`w-full h-44 object-cover rounded-xl transition-all duration-300 ${
+                      phase === 0 ? 'ring-2 ring-emerald-500 scale-[1.01]' : 'opacity-80'
                     }`}
                   />
-                  <span className="text-[11px] text-zinc-400 block">
+                  <span className="text-[11px] font-bold text-zinc-300 block">
                     Paso 1: Posición Inicial (0.jpg)
                   </span>
                 </div>
-                <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-center space-y-1">
+                <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-2.5 text-center space-y-1.5">
                   <img
                     src={exercise.freeExerciseDbUrls[1]}
                     alt={`${exercise.name} - Contracción Final`}
                     onError={() => setImageLoadError(true)}
-                    className={`w-full h-44 object-cover rounded-lg transition-opacity duration-300 ${
-                      phase === 1 ? 'ring-2 ring-emerald-500' : 'opacity-80'
+                    className={`w-full h-44 object-cover rounded-xl transition-all duration-300 ${
+                      phase === 1 ? 'ring-2 ring-emerald-500 scale-[1.01]' : 'opacity-80'
                     }`}
                   />
-                  <span className="text-[11px] text-zinc-400 block">
+                  <span className="text-[11px] font-bold text-zinc-300 block">
                     Paso 2: Contracción Máxima (1.jpg)
                   </span>
                 </div>
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2.5">
+                <p className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
                   Modo sin conexión detectado: mostrando motor vectorial SVG integrado.
                 </p>
                 <ExerciseKinematicSvg pattern={exercise.movementPattern} phase={phase} />
               </div>
             )}
             <p className="text-[11px] text-zinc-400">
-              Fuente directa libre de copyright:{' '}
-              <code className="text-emerald-300 bg-zinc-950 px-1.5 py-0.5 rounded">
-                github.com/yuhonas/free-exercise-db/exercises/{exercise.freeExerciseDbFolder}
+              Repositorio de Dominio Público:{' '}
+              <code className="text-emerald-300 bg-zinc-950 px-2 py-0.5 rounded font-mono">
+                free-exercise-db/exercises/{exercise.freeExerciseDbFolder}
               </code>{' '}
-              (Licencia: <strong>The Unlicense / Dominio Público</strong>).
+              (The Unlicense / Libre de Copyright).
             </p>
           </div>
         )}
@@ -830,17 +855,17 @@ export function ExerciseVisualModal({ exercise, onClose }: ExerciseVisualModalPr
             {OPEN_EXERCISE_SOURCES.map((src) => (
               <div
                 key={src.id}
-                className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 space-y-1 text-xs"
+                className="bg-zinc-950 border border-zinc-800/80 rounded-2xl p-3.5 space-y-1 text-xs"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-bold text-emerald-400">{src.name}</span>
-                  <span className="px-2 py-0.5 rounded bg-zinc-800 text-amber-300 font-medium">
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">
                     {src.license}
                   </span>
                 </div>
                 <p className="text-zinc-300">{src.description}</p>
-                <div className="text-zinc-400 font-mono text-[11px] break-all">
-                  Endpoint / Repo: {src.apiOrRawUrl}
+                <div className="text-zinc-400 font-mono text-[11px] break-all pt-1">
+                  Repo / API: {src.apiOrRawUrl}
                 </div>
               </div>
             ))}
@@ -848,22 +873,29 @@ export function ExerciseVisualModal({ exercise, onClose }: ExerciseVisualModalPr
         )}
 
         {/* Guía paso a paso de técnica */}
-        <div className="bg-zinc-950/90 border border-zinc-800 rounded-xl p-4 space-y-2.5">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-            Técnica de Ejecución Paso a Paso
+        <div className="bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-4 space-y-3">
+          <h4 className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+            <span>⚡ Técnica de Ejecución Biomecánica</span>
           </h4>
-          <ol className="space-y-1.5 text-xs text-zinc-200 list-decimal list-inside">
+          <div className="space-y-2 text-xs text-zinc-200">
             {exercise.executionSteps.map((step, i) => (
-              <li key={i} className="leading-relaxed">
-                {step}
-              </li>
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5 border border-emerald-500/30">
+                  {i + 1}
+                </span>
+                <p className="leading-relaxed text-zinc-300">{step}</p>
+              </div>
             ))}
-          </ol>
-          <div className="pt-2 border-t border-zinc-800/80 text-xs text-rose-300">
-            <strong>⚠️ Error común a evitar:</strong> {exercise.commonMistake}
+          </div>
+          <div className="pt-2.5 border-t border-zinc-800/80 text-xs text-amber-300/90 flex items-start gap-2">
+            <span className="text-base shrink-0">⚠️</span>
+            <p>
+              <strong className="text-amber-300">Error común a evitar:</strong> {exercise.commonMistake}
+            </p>
           </div>
         </div>
       </div>
     </div>
   );
 }
+

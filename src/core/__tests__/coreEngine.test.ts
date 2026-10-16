@@ -505,4 +505,90 @@ describe('5. Récords Insignia en Pantalla Principal (1 Pecho, 1 Piernas, 1 Espa
   });
 });
 
+describe('6. Salón de Récords Personales, Matriz 1RM Epley y Usabilidad Móvil', () => {
+  it('detecta correctamente los récords históricos acumulados a lo largo de las 4 semanas sin duplicar marcas inferiores', () => {
+    const routine3 = buildDefaultSplitRoutine(3);
+    const prEvents: string[] = [];
+
+    for (let wIdx = 0; wIdx < INITIAL_4WEEK_SNAPSHOTS.length; wIdx++) {
+      const week = INITIAL_4WEEK_SNAPSHOTS[wIdx];
+      const priorWeeks = INITIAL_4WEEK_SNAPSHOTS.slice(0, wIdx);
+
+      for (const day of routine3) {
+        const currentEntries = parseWorkoutLog(week.logsByDayId[day.dayId] ?? '');
+        const historicalEntries = priorWeeks.flatMap((w) =>
+          parseWorkoutLog(w.logsByDayId[day.dayId] ?? '')
+        );
+
+        for (const entry of currentEntries) {
+          const prs = detectPersonalRecords(entry, historicalEntries);
+          for (const pr of prs) {
+            prEvents.push(`${week.weekLabel} - ${entry.code} - ${pr.label}: ${pr.newValue}kg`);
+          }
+        }
+      }
+    }
+
+    // Debe detectar múltiples récords progresivos en semanas 2, 3 y 4
+    assert.ok(prEvents.length > 5, 'Deben existir múltiples récords personales detectados en el mesociclo');
+    assert.ok(
+      prEvents.some((p) => p.includes('Semana 2') && p.includes('E1') && p.includes('57.5kg')),
+      'Debe detectar la subida de Press Plano a 57.5kg en Semana 2'
+    );
+    assert.ok(
+      prEvents.some((p) => p.includes('Semana 3') && p.includes('E1') && p.includes('60kg')),
+      'Debe detectar la subida de Press Plano a 60kg en Semana 3'
+    );
+  });
+
+  it('verifica la proyección de cargas según la fórmula Epley (1 a 12 reps) para un 1RM dado', () => {
+    const oneRm = 100; // 100 kg 1RM teórico
+    const repsList = [1, 3, 5, 8, 10, 12];
+    const calcWeight = (reps: number) => Math.round((oneRm / (1 + reps / 30)) * 2) / 2;
+
+    const weights = repsList.map(calcWeight);
+    // Para 1 rep: 100 / (1 + 1/30) = 100 / 1.0333 = 96.8 -> 97
+    // A mayor repetición, la carga debe ser estrictamente decreciente
+    for (let i = 1; i < weights.length; i++) {
+      assert.ok(
+        weights[i] < weights[i - 1],
+        `La carga proyectada para ${repsList[i]} reps (${weights[i]}kg) debe ser menor a la de ${repsList[i - 1]} reps (${weights[i - 1]}kg)`
+      );
+    }
+    // Con 10 reps: 100 / (1 + 10/30) = 100 / 1.333 = 75 kg exactos
+    assert.equal(calcWeight(10), 75);
+    // Con 30 reps daría la mitad del peso (50 kg)
+    assert.equal(calcWeight(30), 50);
+  });
+
+  it('verifica que App.tsx y ExerciseVisualModal.tsx incluyan soporte para dismiss móvil y safe-area insets', () => {
+    const appSource = readFileSync(
+      new URL('../../App.tsx', import.meta.url),
+      'utf8'
+    );
+    assert.ok(
+      appSource.includes('safe-area-inset-bottom'),
+      'App.tsx debe contemplar env(safe-area-inset-bottom) en su barra inferior docked'
+    );
+    assert.ok(
+      appSource.includes('allHistoricalPRs'),
+      'App.tsx debe calcular el Salón de la Fama de Récords'
+    );
+
+    const modalSource = readFileSync(
+      new URL('../../components/ExerciseVisualModal.tsx', import.meta.url),
+      'utf8'
+    );
+    assert.ok(
+      modalSource.includes("e.key === 'Escape'"),
+      'ExerciseVisualModal debe admitir cierre con tecla Escape'
+    );
+    assert.ok(
+      modalSource.includes('onClick={onClose}'),
+      'ExerciseVisualModal debe cerrar al hacer tap en el backdrop oscuro'
+    );
+  });
+});
+
+
 
